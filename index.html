@@ -333,6 +333,15 @@ function renderToday(){
   if (ui.summary){ v.innerHTML = summaryHTML(ui.summary); return; }
   const n = roundsToday();
   let h = "";
+  const dow = new Date().getDay();   // 1 Mon, 3 Wed, 5 Fri
+  const loggedToday = state.sessions.some(s => s.d === todayISO());
+  if ([1,3,5].includes(dow) && !loggedToday){
+    h += '<div class="good"><strong>Workout day.</strong> '+(dow === 1 ? 'Tennis was last night, so rate your hip below before you start.' : 'Your session is on the schedule for today.')+'</div>';
+  }
+  const lastB = state.lastBackup ? parseISO(state.lastBackup.d) : null;
+  if (state.sessions.length && (!lastB || (parseISO(todayISO()) - lastB) / 864e5 >= 14)){
+    h += '<div class="alert"><strong>Time for a backup.</strong> '+(lastB ? 'Your last one was '+fmtDate(state.lastBackup.d)+'.' : 'You haven\'t saved one yet.')+' Go to History and tap Save backup.</div>';
+  }
   h += '<div class="note"><strong>Apple Watch:</strong> start a <strong>Functional Strength Training</strong> workout, then work down this list. Rest 60 to 90 seconds between rounds. End the workout on the Watch when you finish.</div>';
 
   h += '<h2>Hip check</h2><p class="sub">How did your left hip feel by the morning after your last session or tennis? 0 is nothing, 10 is bad.</p>';
@@ -449,7 +458,8 @@ function renderHist(){
 /* ---------- Render: plan ---------- */
 function renderPlan(){
   const v = document.getElementById("v-plan");
-  let h = '<div class="note"><strong>How it ramps up.</strong> Each exercise has four levels. When you hit the top of the rep range in every round, that exercise moves up and you start again at the bottom of the range. Weeks 1 and 2 are two rounds, three after that. Mild effort soreness is fine. Sharp joint pain means drop a level.</div>';
+  let h = '<div class="note"><strong>Phone reminders.</strong> Adds two repeating events to your iPhone Calendar: workouts Monday, Wednesday and Friday at 4:30 PM, and a backup reminder every other Friday. Change the times in Calendar afterward if you like.<div style="margin-top:10px"><a class="btn small primary" style="display:inline-block;text-decoration:none" href="baseline-reminders.ics">Add reminders to Calendar</a></div></div>';
+  h += '<div class="note"><strong>How it ramps up.</strong> Each exercise has four levels. When you hit the top of the rep range in every round, that exercise moves up and you start again at the bottom of the range. Weeks 1 and 2 are two rounds, three after that. Mild effort soreness is fine. Sharp joint pain means drop a level.</div>';
   h += '<div class="note"><strong>Your hip rule.</strong> Outer-hip work is in every session. Split squats, lateral lunges and hops stay locked until '+HIP_GATE_SESSIONS+' sessions in a row are rated '+HIP_QUIET+' or lower. A rating of '+HIP_FLARE+' or more eases those exercises one level that day. See a doctor or physical therapist for pain at night or at rest, a limp, or soreness that keeps getting worse.</div>';
   EX.forEach(ex => {
     const cur = state.levels[ex.id];
