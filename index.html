@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Baseline">
+<meta name="theme-color" content="#2b5c8e">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Baseline Strength</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one narrow column, phone first. Court-blue header with baseline lines; exercise rows read like a scorecard. */
+:root{
+  --bg:#f2f5f8; --surface:#ffffff; --ink:#14233a; --muted:#56667b; --line:#d6dee7;
+  --court:#2b5c8e; --court-ink:#ffffff; --court-line:rgba(255,255,255,.55);
+  --ball:#dde84a; --ball-ink:#1d2610; --warn:#a9481f; --warn-bg:#fbeee6; --ok:#2b7149; --ok-bg:#e6f3eb;
+  --font-display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --font-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1520; --surface:#152132; --ink:#e5ecf4; --muted:#95a5ba; --line:#253549;
+  --court:#1f4670; --court-ink:#f1f6fb; --court-line:rgba(255,255,255,.35);
+  --ball:#d3df45; --ball-ink:#1a220c; --warn:#ec8e62; --warn-bg:#2d1b12; --ok:#74c896; --ok-bg:#14291d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1520; --surface:#152132; --ink:#e5ecf4; --muted:#95a5ba; --line:#253549;
+  --court:#1f4670; --court-ink:#f1f6fb; --court-line:rgba(255,255,255,.35);
+  --ball:#d3df45; --ball-ink:#1a220c; --warn:#ec8e62; --warn-bg:#2d1b12; --ok:#74c896; --ok-bg:#14291d; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--court);outline-offset:2px}
+
+header.court{background:var(--court);color:var(--court-ink);position:relative;overflow:hidden}
+header.court .wrap{padding-block:calc(22px + env(safe-area-inset-top,0px)) 18px;position:relative}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;font-weight:600}
+h1{font-family:var(--font-display);font-weight:800;font-size:44px;line-height:1;margin:4px 0 10px;letter-spacing:.01em;text-transform:uppercase}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;position:relative;padding-bottom:16px}
+.meta b{font-family:var(--font-display);font-size:22px;font-weight:700;margin-right:4px;font-variant-numeric:tabular-nums}
+.sync{font-size:12px;opacity:.85}
+
+nav.tabs{display:flex;gap:4px;margin:16px 0 12px;border-bottom:1px solid var(--line)}
+nav.tabs button{background:none;border:0;padding:10px 14px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--court)}
+
+.note{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font-size:14px;color:var(--muted);margin:12px 0}
+.note strong{color:var(--ink)}
+.alert{background:var(--warn-bg);color:var(--ink);border-left:4px solid var(--warn);border-radius:4px;padding:10px 12px;font-size:14px;margin:12px 0}
+.good{background:var(--ok-bg);border-left:4px solid var(--ok);border-radius:4px;padding:10px 12px;font-size:14px;margin:12px 0}
+
+h2{font-family:var(--font-display);font-weight:700;font-size:24px;text-transform:uppercase;letter-spacing:.02em;margin:22px 0 8px}
+.sub{color:var(--muted);font-size:13px;margin:-4px 0 10px}
+
+.hipscale{display:grid;grid-template-columns:repeat(11,1fr);gap:4px}
+.hipscale button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:8px 0;font-weight:600;font-variant-numeric:tabular-nums}
+.hipscale button[aria-pressed="true"]{background:var(--court);color:var(--court-ink);border-color:var(--court)}
+.scalelab{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px}
+
+details.warm{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;margin:12px 0}
+details.warm summary{font-weight:600}
+details.warm ul{margin:8px 0 0;padding-left:20px;color:var(--muted)}
+
+.ex{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:10px 0}
+.exhead{display:flex;gap:10px;align-items:baseline;justify-content:space-between;flex-wrap:wrap}
+.exname{font-weight:700;font-size:16px;min-width:0}
+.cat{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.lvl{font-family:var(--font-display);font-weight:700;font-size:15px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:1px 10px;white-space:nowrap}
+.lvl.down{border-color:var(--warn);color:var(--warn)}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--ball);color:var(--ball-ink);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.desc{color:var(--muted);font-size:14px;margin:6px 0 10px;max-width:62ch}
+.target{font-size:13px;color:var(--muted);margin-bottom:8px}
+.target b{color:var(--ink)}
+.rounds{display:flex;flex-wrap:wrap;gap:8px}
+.round{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.round span.rl{font-size:11px;color:var(--muted);padding:0 8px;text-transform:uppercase;letter-spacing:.06em}
+.round button{background:var(--bg);border:0;width:38px;height:40px;font-size:20px;line-height:1}
+.round output{min-width:40px;text-align:center;font-family:var(--font-display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.round.top output{color:var(--ok)}
+.round button.rchk{width:40px;font-size:16px;border-left:1px solid var(--line);background:var(--surface);color:var(--muted)}
+.round button.rchk[aria-pressed="true"]{background:var(--ok);color:var(--surface);border-left-color:var(--ok)}
+.round.checked{border-color:var(--ok)}
+.ready{font-size:13px;color:var(--ok);margin-top:8px;font-weight:600}
+.exright{display:flex;align-items:center;gap:10px}
+.donebox{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.donebox input{width:22px;height:22px;margin:0;accent-color:var(--ok)}
+.ex.isdone{border-color:var(--ok);background:var(--ok-bg)}
+.held{font-size:13px;color:var(--warn);margin-top:8px}
+
+.check{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin:10px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--court)}
+
+.bar{position:sticky;bottom:0;background:var(--bg);padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;border-top:1px solid var(--line);margin-top:16px}
+.btn{border:0;border-radius:8px;padding:12px 16px;font-weight:700}
+.btn.primary{background:var(--court);color:var(--court-ink);flex:1}
+.btn.ghost{background:var(--surface);border:1px solid var(--line)}
+.btn.small{padding:6px 10px;font-size:13px;font-weight:600}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+#rest{font-variant-numeric:tabular-nums;min-width:110px}
+
+.summary{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:12px 0}
+.summary h3{margin:0 0 6px;font-family:var(--font-display);font-size:24px;text-transform:uppercase}
+.up{display:flex;gap:8px;align-items:baseline;margin:6px 0}
+.up .tag{margin:0}
+
+.hist{list-style:none;margin:0;padding:0}
+.hist li{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin:8px 0}
+.hrow{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hdate{font-weight:700}
+.hmeta{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:13px}
+
+.ladder{list-style:none;margin:8px 0 10px;padding:0;display:grid;gap:4px}
+.ladder li{display:flex;gap:10px;align-items:baseline;padding:6px 10px;border-radius:6px;font-size:14px;color:var(--muted)}
+.ladder li .n{font-family:var(--font-display);font-weight:700;width:22px;flex:none}
+.ladder li.cur{background:var(--court);color:var(--court-ink)}
+.ladder li.done{color:var(--ink)}
+.ladder li .lock{font-size:12px;margin-left:auto;white-space:nowrap}
+.adj{display:flex;gap:8px;flex-wrap:wrap}
+
+.empty{color:var(--muted);text-align:center;padding:28px 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+label.btn{display:inline-block;cursor:pointer}
+@media (prefers-reduced-motion:no-preference){.ex,.summary{transition:border-color .2s}}
+</style>
+</head>
+<body>
+<header class="court">
+  <div class="wrap">
+    <div class="eyebrow">No-equipment strength, 3x a week</div>
+    <h1>Baseline Strength</h1>
+    <div class="meta">
+      <span><b id="m-week">1</b>week</span>
+      <span><b id="m-thisweek">0/3</b>this week</span>
+      <span><b id="m-total">0</b>sessions</span>
+      <span class="sync" id="sync">Saved on this phone only</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="t-today" aria-selected="true" data-tab="today">Today</button>
+    <button role="tab" id="t-hist" aria-selected="false" data-tab="hist">History</button>
+    <button role="tab" id="t-plan" aria-selected="false" data-tab="plan">Plan &amp; levels</button>
+  </nav>
+
+  <section id="v-today"></section>
+  <section id="v-hist" hidden></section>
+  <section id="v-plan" hidden></section>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Program ---------- */
+const EX = [
+ {id:"legs", cat:"Legs", gate:3, lv:[
+  {n:"Chair sit-to-stand", d:"Stand up from a chair without using your hands, then sit back down slowly. Use a higher seat or a cushion if your hip complains.", u:"reps", lo:8, hi:12},
+  {n:"Bodyweight squat", d:"Feet shoulder width. Sit back and down only as deep as is pain-free, then stand tall.", u:"reps", lo:8, hi:12},
+  {n:"Split squat", d:"One foot forward, one back. Lower the back knee toward the floor, then stand. Hold a counter for balance if needed.", u:"reps per side", lo:8, hi:12},
+  {n:"Bulgarian split squat", d:"Back foot on a couch or chair seat. Lower slowly, front knee tracking over the toes.", u:"reps per side", lo:8, hi:12}]},
+ {id:"push", cat:"Push", lv:[
+  {n:"Wall push-up", d:"Hands on the wall at shoulder height. Body in one straight line, chest to the wall and back.", u:"reps", lo:8, hi:12},
+  {n:"Counter push-up", d:"Hands on the edge of the kitchen counter. Walk your feet back until it feels like work.", u:"reps", lo:8, hi:12},
+  {n:"Stair or chair push-up", d:"Hands on a low stair, or a sturdy chair pushed against a wall so it can't slide.", u:"reps", lo:8, hi:12},
+  {n:"Floor push-up", d:"Full push-up. Keep hips level with your shoulders.", u:"reps", lo:8, hi:12}]},
+ {id:"bridge", cat:"Hips", lv:[
+  {n:"Glute bridge", d:"On your back, knees bent. Squeeze your glutes and lift your hips until body is straight from knees to shoulders.", u:"reps", lo:8, hi:12},
+  {n:"Bridge with 3-sec hold", d:"Same bridge, hold 3 seconds at the top of every rep.", u:"reps", lo:8, hi:12},
+  {n:"Single-leg bridge", d:"One foot on the floor, the other leg straight. Keep the pelvis level.", u:"reps per side", lo:8, hi:12},
+  {n:"Single-leg Romanian deadlift", d:"Stand on one leg, hinge forward with a flat back as the free leg reaches behind you. Fingertips on a counter if needed.", u:"reps per side", lo:8, hi:12}]},
+ {id:"hipstab", cat:"Outer hip", tag:"For your hip", lv:[
+  {n:"Clamshell", d:"Lie on your side, knees bent, feet together. Open the top knee without rolling your pelvis back. Slow and controlled.", u:"reps per side", lo:12, hi:20},
+  {n:"Side-lying leg raise", d:"Lie on your side, bottom knee bent. Lift the top leg straight, toes angled slightly down, heel leading.", u:"reps per side", lo:12, hi:20},
+  {n:"Leg raise, 3-sec hold", d:"Same leg raise, hold 3 seconds at the top of every rep.", u:"reps per side", lo:10, hi:15},
+  {n:"Side plank on knees + leg lift", d:"Side plank from your knees, then lift the top leg and lower it. If the bottom hip is sore, pad it with a folded towel.", u:"reps per side", lo:8, hi:12}]},
+ {id:"back", cat:"Back and shoulders", lv:[
+  {n:"Face-down Y and T raises", d:"Lie face down. Lift your arms in a Y, lower, then lift in a T, lower. That's one rep. Thumbs up.", u:"reps", lo:8, hi:12},
+  {n:"Y and T raises, 3-sec holds", d:"Same, but hold each position 3 seconds.", u:"reps", lo:8, hi:12},
+  {n:"Reverse snow angels", d:"Face down, arms just off the floor. Sweep them from your hips to overhead and back without touching down.", u:"reps", lo:8, hi:12},
+  {n:"Band row", d:"Needs a resistance band. Anchor it in a door at chest height, pull your elbows back past your ribs.", u:"reps", lo:8, hi:12}]},
+ {id:"core", cat:"Core", lv:[
+  {n:"Dead bug", d:"On your back, arms up, knees over hips. Lower the opposite arm and leg slowly, keep your low back down.", u:"reps per side", lo:8, hi:12},
+  {n:"Bird dog", d:"On hands and knees. Reach the opposite arm and leg long, pause, return. Keep your back flat.", u:"reps per side", lo:8, hi:12},
+  {n:"Side plank on knees", d:"Forearm under the shoulder, knees bent, hips lifted in a straight line.", u:"seconds per side", lo:20, hi:40},
+  {n:"Full side plank", d:"Same, from your feet.", u:"seconds per side", lo:20, hi:40}]},
+ {id:"tennis", cat:"Tennis feet", gate:3, lv:[
+  {n:"Calf raise, both feet", d:"Rise onto your toes, pause, lower slowly. Fingertips on the wall for balance.", u:"reps", lo:12, hi:20},
+  {n:"Single-leg calf raise", d:"Same, one foot at a time. Slow on the way down.", u:"reps per side", lo:8, hi:12},
+  {n:"Lateral lunge", d:"Step wide to one side, sit back into that hip, push back to center.", u:"reps per side", lo:8, hi:12},
+  {n:"Side-to-side hops", d:"Small, quick, quiet hops over an imaginary line. Stop if the hip or Achilles complains.", u:"seconds", lo:20, hi:40}]}
+];
+const HIP_GATE_SESSIONS = 6;   // about two weeks at 3 sessions a week
+const HIP_QUIET = 2;           // 0-10 rating at or below this counts as quiet
+const HIP_FLARE = 5;           // at or above this, gated exercises drop a level for the day
+const MAX_SESSIONS = 400;
+
+/* ---------- State ---------- */
+const LS_STATE = "baseline-strength-state-v1";
+const LS_DRAFT = "baseline-strength-draft-v1";
+
+function freshState(){
+  const levels = {}; EX.forEach(e => levels[e.id] = 1);
+  return {v:1, updatedAt:0, levels, sessions:[]};
+}
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function validState(s){
+  return s && typeof s === "object" && s.levels && Array.isArray(s.sessions);
+}
+function normalize(s){
+  const base = freshState();
+  const out = Object.assign(base, s);
+  EX.forEach(e => { const l = Number(out.levels[e.id]); out.levels[e.id] = (l >= 1 && l <= 4) ? l : 1; });
+  return out;
+}
+
+let state = freshState();
+try { const raw = localStorage.getItem(LS_STATE); if (raw){ const p = JSON.parse(raw); if (validState(p)) state = normalize(p); } } catch(e){}
+
+let draft = null;
+try { const raw = localStorage.getItem(LS_DRAFT); if (raw) draft = JSON.parse(raw); } catch(e){}
+if (!draft || typeof draft !== "object" || !draft.reps) draft = {hip:null, bal:false, reps:{}, rdone:{}};
+if (!draft.rdone || typeof draft.rdone !== "object") draft.rdone = {};
+function roundChecks(ex){
+  const n = roundsToday();
+  let c = draft.rdone[ex.id];
+  if (!Array.isArray(c)) c = draft.rdone[ex.id] = [];
+  while (c.length < n) c.push(false);
+  if (c.length > n) c.length = n;
+  return c;
+}
+function isDone(ex){ return roundChecks(ex).every(Boolean); }
+function doneCount(){ return EX.filter(isDone).length; }
+function anyRoundDone(){ return EX.some(e => roundChecks(e).some(Boolean)); }
+
+let ui = {tab:"today", summary:null, confirmRemove:false, rest:null, backupMsg:"", restorePending:null, finishMsg:""};
+
+/* ---------- Storage (db when available, device storage always) ---------- */
+let store = {ref:null};
+let saveChain = Promise.resolve();
+function setSync(t){ const el = document.getElementById("sync"); if (el) el.textContent = t; }
+
+function persist(){
+  state.updatedAt = Date.now();
+  try { localStorage.setItem(LS_STATE, JSON.stringify(state)); } catch(e){}
+  if (store.ref){
+    const body = {state: clone(state)};
+    setSync("Saving…");
+    saveChain = saveChain.then(() => store.ref.set(body)).then(
+      () => setSync("Synced"),
+      (e) => setSync(e && e.code === "quota_exceeded" ? "Sync storage full" : "Saved on this device only")
+    );
+  }
+}
+function saveDraft(){ try { localStorage.setItem(LS_DRAFT, JSON.stringify(draft)); } catch(e){} }
+
+
+/* ---------- Helpers ---------- */
+function todayISO(){ const d = new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function parseISO(s){ const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
+function fmtDate(s){ return parseISO(s).toLocaleDateString(undefined, {weekday:"short", month:"short", day:"numeric"}); }
+function weekNum(){
+  if (!state.sessions.length) return 1;
+  const first = parseISO(state.sessions[0].d), now = parseISO(todayISO());
+  return Math.floor((now - first) / (7*864e5)) + 1;
+}
+function thisWeekCount(){
+  const now = parseISO(todayISO());
+  const dow = (now.getDay() + 6) % 7;  // Monday = 0
+  const mon = new Date(now); mon.setDate(now.getDate() - dow);
+  return state.sessions.filter(s => parseISO(s.d) >= mon).length;
+}
+function roundsToday(){ return state.sessions.length < 6 ? 2 : 3; }
+function quietStreak(){
+  let n = 0;
+  for (let i = state.sessions.length - 1; i >= 0; i--){
+    const h = state.sessions[i].hip;
+    if (typeof h === "number" && h <= HIP_QUIET) n++; else break;
+  }
+  return n;
+}
+function hipClear(){ return quietStreak() >= HIP_GATE_SESSIONS; }
+function gateBlocks(ex, toLevel){ return !!ex.gate && toLevel >= ex.gate && !hipClear(); }
+function flaring(){ return typeof draft.hip === "number" && draft.hip >= HIP_FLARE; }
+function effLevel(ex){
+  const l = state.levels[ex.id];
+  return (ex.gate && flaring()) ? Math.max(1, l - 1) : l;
+}
+function lastReps(id, level){
+  for (let i = state.sessions.length - 1; i >= 0; i--){
+    const s = state.sessions[i].sets && state.sessions[i].sets[id];
+    if (s && s.l === level && Array.isArray(s.r) && s.r.length) return s.r;
+  }
+  return null;
+}
+function repsFor(ex){
+  const level = effLevel(ex), cfg = ex.lv[level-1], n = roundsToday();
+  let d = draft.reps[ex.id];
+  if (!d || d.l !== level || !Array.isArray(d.r)){
+    const prev = lastReps(ex.id, level);
+    d = {l:level, r:[]};
+    draft.reps[ex.id] = d;
+    for (let i = 0; i < n; i++) d.r.push(prev ? (prev[Math.min(i, prev.length-1)]) : cfg.lo);
+  }
+  while (d.r.length < n) d.r.push(d.r[d.r.length-1] ?? cfg.lo);
+  if (d.r.length > n) d.r.length = n;
+  return d;
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ---------- Render: header ---------- */
+function renderMeta(){
+  document.getElementById("m-week").textContent = weekNum();
+  document.getElementById("m-thisweek").textContent = thisWeekCount() + "/3";
+  document.getElementById("m-total").textContent = state.sessions.length;
+}
+
+/* ---------- Render: today ---------- */
+function renderToday(){
+  const v = document.getElementById("v-today");
+  if (ui.summary){ v.innerHTML = summaryHTML(ui.summary); return; }
+  const n = roundsToday();
+  let h = "";
+  h += '<div class="note"><strong>Apple Watch:</strong> start a <strong>Functional Strength Training</strong> workout, then work down this list. Rest 60 to 90 seconds between rounds. End the workout on the Watch when you finish.</div>';
+
+  h += '<h2>Hip check</h2><p class="sub">How did your left hip feel by the morning after your last session or tennis? 0 is nothing, 10 is bad.</p>';
+  h += '<div class="hipscale" role="group" aria-label="Hip soreness 0 to 10">';
+  for (let i = 0; i <= 10; i++) h += '<button data-act="hip" data-v="'+i+'" aria-pressed="'+(draft.hip===i)+'">'+i+'</button>';
+  h += '</div><div class="scalelab"><span>Quiet</span><span>Sore</span></div>';
+  if (flaring()){
+    h += '<div class="alert"><strong>Hip is flaring.</strong> Legs and Tennis feet are one level easier today and won\'t count toward leveling up. If this keeps happening, book a physical therapist visit.</div>';
+  } else {
+    const q = quietStreak();
+    if (!hipClear()) h += '<p class="sub" style="margin-top:8px">Split squats, lateral lunges and hops unlock after '+HIP_GATE_SESSIONS+' sessions in a row rated '+HIP_QUIET+' or lower. Current run: '+q+' of '+HIP_GATE_SESSIONS+'.</p>';
+    else h += '<div class="good">Hip has been quiet for '+q+' sessions. All levels are unlocked.</div>';
+  }
+
+  h += '<details class="warm"><summary>Warm-up, 5 minutes</summary><ul><li>March in place, 1 minute</li><li>Arm circles, 10 each direction</li><li>Hip circles, 10 each direction</li><li>10 slow bodyweight squats, pain-free depth</li><li>Leg swings, 10 each side, front-to-back and side-to-side</li></ul></details>';
+
+  h += '<h2>Circuit, '+n+' rounds</h2><p class="sub">Set each round to what you actually did. Hit the top of the range in every round and that exercise moves up a level.</p>';
+
+  EX.forEach(ex => {
+    const cur = state.levels[ex.id], level = effLevel(ex), cfg = ex.lv[level-1], d = repsFor(ex);
+    const allTop = d.r.every(x => x >= cfg.hi);
+    const exDone = isDone(ex), checks = roundChecks(ex);
+    h += '<article class="ex'+(exDone?' isdone':'')+'" data-ex="'+ex.id+'">';
+    h += '<div class="exhead"><div class="exname"><div class="cat">'+esc(ex.cat)+(ex.tag?'<span class="tag">'+esc(ex.tag)+'</span>':'')+'</div>'+esc(cfg.n)+'</div>';
+    h += '<div class="exright"><span class="lvl'+(level<cur?' down':'')+'">'+(level<cur?'Eased to L'+level:'Level '+level)+'</span>';
+    h += '<label class="donebox"><input type="checkbox" id="done-'+ex.id+'" data-act="done" data-ex="'+ex.id+'" '+(exDone?'checked':'')+'>Done</label></div></div>';
+    h += '<p class="desc">'+esc(cfg.d)+'</p>';
+    h += '<div class="target">Target <b>'+cfg.lo+' to '+cfg.hi+'</b> '+esc(cfg.u)+'</div>';
+    h += '<div class="rounds">';
+    d.r.forEach((x, i) => {
+      h += '<div class="round'+(x>=cfg.hi?' top':'')+(checks[i]?' checked':'')+'"><span class="rl">R'+(i+1)+'</span>';
+      h += '<button data-act="dec" data-ex="'+ex.id+'" data-i="'+i+'" aria-label="Fewer, round '+(i+1)+'">&minus;</button>';
+      h += '<output aria-live="polite">'+x+'</output>';
+      h += '<button data-act="inc" data-ex="'+ex.id+'" data-i="'+i+'" aria-label="More, round '+(i+1)+'">+</button>';
+      h += '<button class="rchk" data-act="rchk" data-ex="'+ex.id+'" data-i="'+i+'" aria-pressed="'+(!!checks[i])+'" aria-label="Round '+(i+1)+' done">&#10003;</button></div>';
+    });
+    h += '</div>';
+    if (allTop && level === cur && cur < 4){
+      if (gateBlocks(ex, cur+1)) h += '<div class="held">Top of range. Next level stays locked until the hip has been quiet for '+HIP_GATE_SESSIONS+' sessions.</div>';
+      else h += '<div class="ready">Top of range. Moves to '+esc(ex.lv[cur].n)+' when you finish.</div>';
+    }
+    h += '</article>';
+  });
+
+  h += '<label class="check"><input type="checkbox" id="bal" data-act="bal" '+(draft.bal?'checked':'')+'><span><strong>Balance finisher</strong><br><span class="sub" style="margin:0">Stand on one foot, 30 seconds each side, near a counter. Once easy, close your eyes.</span></span></label>';
+
+  h += '<div class="bar"><button class="btn ghost" id="rest" data-act="rest">'+restLabel()+'</button><button class="btn primary" data-act="finish">Finish session ('+doneCount()+'/'+EX.length+' done)</button></div>';
+  if (ui.finishMsg) h += '<p class="sub" style="margin-top:8px;color:var(--warn)">'+esc(ui.finishMsg)+'</p>';
+  if (draft.hip === null) h += '<p class="sub" style="margin-top:8px">Tip: rate the hip before finishing so the session counts toward unlocking harder levels.</p>';
+  v.innerHTML = h;
+}
+
+function summaryHTML(s){
+  let h = '<div class="summary"><h3>Session saved</h3><p class="sub" style="margin:0 0 8px">'+fmtDate(s.d)+', session '+state.sessions.length+'. End your Watch workout now.</p>';
+  if (s.ups.length){
+    h += '<p style="margin:10px 0 4px;font-weight:600">Leveled up</p>';
+    s.ups.forEach(u => { const ex = EX.find(e => e.id === u); h += '<div class="up"><span class="tag">Up</span><span>'+esc(ex.cat)+': '+esc(ex.lv[state.levels[u]-1].n)+'</span></div>'; });
+    h += '<p class="sub" style="margin-top:8px">Start new levels at the bottom of the range.</p>';
+  } else {
+    h += '<p>No level changes this time. Add a rep or two where you can next session.</p>';
+  }
+  if (s.held.length){
+    h += '<p class="sub">Ready but held for the hip: '+s.held.map(id => esc(EX.find(e => e.id === id).cat)).join(", ")+'.</p>';
+  }
+  if (state.sessions.length - (state.lastBackup ? state.lastBackup.n : 0) >= 6){
+    h += '<p class="sub">It has been 6 or more sessions since your last backup. Save one from the History tab.</p>';
+  }
+  h += '<div style="margin-top:12px"><button class="btn primary" data-act="newsession" style="width:100%">Done</button></div></div>';
+  return h;
+}
+
+/* ---------- Render: history ---------- */
+function backupHTML(){
+  let h = '<div class="note"><strong>Backup.</strong> Your log lives only on this phone, inside this home screen app. Save a backup file every couple of weeks to Files or iCloud Drive, and restore it here if the log ever disappears.';
+  h += '<br><span>'+(state.lastBackup ? 'Last backup: '+fmtDate(state.lastBackup.d)+', '+state.lastBackup.n+' sessions.' : 'No backup yet.')+'</span>';
+  h += '<div class="adj" style="margin-top:10px"><button class="btn small primary" style="flex:none" data-act="backup">Save backup</button>';
+  h += '<label class="btn small ghost" for="restorefile">Restore from backup</label><input type="file" id="restorefile" class="vh" accept=".json,application/json"></div>';
+  if (ui.restorePending){
+    const p = ui.restorePending, last = p.sessions.length ? p.sessions[p.sessions.length-1].d : null;
+    h += '<div class="confirm"><span>Replace this log ('+state.sessions.length+' sessions) with the backup ('+p.sessions.length+' sessions'+(last?', last on '+fmtDate(last):'')+')?</span>';
+    h += '<button class="btn small ghost" data-act="restoreno">Keep current</button><button class="btn small primary" style="flex:none" data-act="restoreyes">Replace</button></div>';
+  }
+  if (ui.backupMsg) h += '<p class="sub" style="margin:8px 0 0">'+esc(ui.backupMsg)+'</p>';
+  h += '</div>';
+  return h;
+}
+
+function renderHist(){
+  const v = document.getElementById("v-hist");
+  if (!state.sessions.length){
+    v.innerHTML = backupHTML() + '<div class="empty">No sessions yet. Finish your first one on the Today tab and it shows up here.</div>';
+    return;
+  }
+  const first = parseISO(state.sessions[0].d);
+  let h = backupHTML() + '<ul class="hist">';
+  for (let i = state.sessions.length - 1; i >= 0; i--){
+    const s = state.sessions[i];
+    const wk = Math.floor((parseISO(s.d) - first) / (7*864e5)) + 1;
+    h += '<li><div class="hrow"><span class="hdate">'+fmtDate(s.d)+'</span><span class="hmeta">Week '+wk+' · '+s.rounds+' rounds · '+Object.keys(s.sets||{}).length+' of '+EX.length+' exercises · hip '+(typeof s.hip==="number"?s.hip:"not rated")+(s.bal?' · balance':'')+'</span></div>';
+    if (s.ups && s.ups.length) h += '<div style="margin-top:6px">'+s.ups.map(u => '<span class="tag" style="margin:0 6px 0 0">'+esc(EX.find(e=>e.id===u).cat)+' up</span>').join("")+'</div>';
+    if (i === state.sessions.length - 1){
+      if (ui.confirmRemove){
+        h += '<div class="confirm"><span>Remove this session'+(s.ups&&s.ups.length?' and undo its level-ups':'')+'?</span><button class="btn small ghost" data-act="rmno">Keep</button><button class="btn small primary" style="flex:none" data-act="rmyes">Remove</button></div>';
+      } else {
+        h += '<div class="confirm"><button class="btn small ghost" data-act="rm">Remove latest session</button></div>';
+      }
+    }
+    h += '</li>';
+  }
+  h += '</ul>';
+  v.innerHTML = h;
+}
+
+/* ---------- Render: plan ---------- */
+function renderPlan(){
+  const v = document.getElementById("v-plan");
+  let h = '<div class="note"><strong>How it ramps up.</strong> Each exercise has four levels. When you hit the top of the rep range in every round, that exercise moves up and you start again at the bottom of the range. Weeks 1 and 2 are two rounds, three after that. Mild effort soreness is fine. Sharp joint pain means drop a level.</div>';
+  h += '<div class="note"><strong>Your hip rule.</strong> Outer-hip work is in every session. Split squats, lateral lunges and hops stay locked until '+HIP_GATE_SESSIONS+' sessions in a row are rated '+HIP_QUIET+' or lower. A rating of '+HIP_FLARE+' or more eases those exercises one level that day. See a doctor or physical therapist for pain at night or at rest, a limp, or soreness that keeps getting worse.</div>';
+  EX.forEach(ex => {
+    const cur = state.levels[ex.id];
+    h += '<h2>'+esc(ex.cat)+(ex.tag?'<span class="tag">'+esc(ex.tag)+'</span>':'')+'</h2><ol class="ladder">';
+    ex.lv.forEach((l, i) => {
+      const n = i + 1;
+      const cls = n === cur ? "cur" : (n < cur ? "done" : "");
+      const locked = n > cur && gateBlocks(ex, n);
+      h += '<li class="'+cls+'"><span class="n">L'+n+'</span><span>'+esc(l.n)+' <span style="opacity:.75">('+l.lo+' to '+l.hi+' '+esc(l.u)+')</span></span>'+(locked?'<span class="lock">Hip lock</span>':'')+'</li>';
+    });
+    h += '</ol><div class="adj"><button class="btn small ghost" data-act="lvdown" data-ex="'+ex.id+'" '+(cur<=1?'disabled':'')+'>Easier level</button>';
+    h += '<button class="btn small ghost" data-act="lvup" data-ex="'+ex.id+'" '+(cur>=4||gateBlocks(ex,cur+1)?'disabled':'')+'>Harder level</button></div>';
+  });
+  v.innerHTML = h;
+}
+
+function renderAll(){ renderMeta(); renderToday(); renderHist(); renderPlan(); }
+
+/* ---------- Rest timer ---------- */
+function restLabel(){ return ui.rest ? ("Rest " + ui.rest.left + "s") : "Rest 75s"; }
+function tickRest(){
+  const b = document.getElementById("rest");
+  if (!ui.rest) { if (b) b.textContent = restLabel(); return; }
+  ui.rest.left--;
+  if (ui.rest.left <= 0){ clearInterval(ui.rest.t); ui.rest = null; if (b) b.textContent = "Go"; setTimeout(() => { const bb = document.getElementById("rest"); if (bb && !ui.rest) bb.textContent = restLabel(); }, 2500); return; }
+  if (b) b.textContent = restLabel();
+}
+
+/* ---------- Actions ---------- */
+function finish(){
+  if (!anyRoundDone()){ ui.finishMsg = "Check off at least one round before finishing."; renderToday(); return; }
+  ui.finishMsg = "";
+  const sets = {}, ups = [], held = [];
+  EX.forEach(ex => {
+    const checks = roundChecks(ex);
+    if (!checks.some(Boolean)) return;   // skipped: not logged, no level-up
+    const d = repsFor(ex);
+    sets[ex.id] = {l:d.l, r:d.r.filter((x, i) => checks[i])};
+    const cur = state.levels[ex.id], cfg = ex.lv[d.l-1];
+    // Level-up needs every round completed and at the top of the range.
+    if (checks.every(Boolean) && d.l === cur && cur < 4 && d.r.every(x => x >= cfg.hi)){
+      if (gateBlocks(ex, cur+1)) held.push(ex.id); else ups.push(ex.id);
+    }
+  });
+  const session = {d:todayISO(), t:Date.now(), hip:draft.hip, bal:!!draft.bal, rounds:roundsToday(), sets, ups, held};
+  // A quiet hip rating in this session can itself unlock a gate, so re-check held items after adding it.
+  state.sessions.push(session);
+  const stillHeld = [];
+  held.forEach(id => { const ex = EX.find(e => e.id === id); if (gateBlocks(ex, state.levels[id]+1)) stillHeld.push(id); else ups.push(id); });
+  session.held = stillHeld;
+  ups.forEach(id => state.levels[id] = Math.min(4, state.levels[id] + 1));
+  if (state.sessions.length > MAX_SESSIONS) state.sessions.splice(0, state.sessions.length - MAX_SESSIONS);
+  persist();
+  draft = {hip:null, bal:false, reps:{}, rdone:{}};
+  saveDraft();
+  ui.summary = session;
+  renderAll();
+  window.scrollTo({top:0});
+}
+
+/* ---------- Backup and restore ---------- */
+function backup(){
+  const name = "baseline-strength-backup-"+todayISO()+".json";
+  const text = JSON.stringify({app:"baseline-strength", v:1, exported:new Date().toISOString(), state:clone(state)}, null, 1);
+  const done = () => { state.lastBackup = {d:todayISO(), n:state.sessions.length}; persist(); ui.backupMsg = "Backup saved."; renderHist(); };
+  const fail = (e) => { ui.backupMsg = (e && e.name === "AbortError") ? "Backup canceled." : "Couldn't save the backup. Try again."; renderHist(); };
+  try {
+    let file = null;
+    try { file = new File([text], name, {type:"application/json"}); } catch(e){}
+    if (file && navigator.canShare && navigator.canShare({files:[file]})){
+      navigator.share({files:[file], title:"Baseline backup"}).then(done, fail);   // iPhone: share sheet, then Save to Files
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([text], {type:"application/json"}));
+    const a = document.createElement("a");
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    done();
+  } catch(e){ fail(e); }
+}
+function readBackup(file){
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const p = JSON.parse(String(r.result));
+      const s = (p && p.app === "baseline-strength") ? p.state : p;
+      if (!validState(s)) throw new Error("bad");
+      ui.restorePending = normalize(clone(s));
+      ui.backupMsg = "";
+    } catch(e){
+      ui.restorePending = null;
+      ui.backupMsg = "That file isn't a Baseline Strength backup. Pick the .json file saved from this tracker.";
+    }
+    renderHist();
+  };
+  r.onerror = () => { ui.backupMsg = "Couldn't read that file. Try again."; renderHist(); };
+  r.readAsText(file);
+}
+document.addEventListener("change", ev => {
+  const t = ev.target;
+  if (t && t.id === "restorefile" && t.files && t.files[0]){ readBackup(t.files[0]); t.value = ""; }
+});
+
+document.addEventListener("click", ev => {
+  const t = ev.target.closest("[data-act],[data-tab]");
+  if (!t) return;
+  if (t.dataset.tab){
+    ui.tab = t.dataset.tab;
+    ["today","hist","plan"].forEach(k => {
+      document.getElementById("v-"+k).hidden = k !== ui.tab;
+      document.querySelector('[data-tab="'+k+'"]').setAttribute("aria-selected", String(k === ui.tab));
+    });
+    return;
+  }
+  const a = t.dataset.act;
+  if (a === "hip"){
+    const val = Number(t.dataset.v);
+    draft.hip = draft.hip === val ? null : val;
+    saveDraft(); renderToday();
+  } else if (a === "inc" || a === "dec"){
+    const ex = EX.find(e => e.id === t.dataset.ex), d = repsFor(ex), i = Number(t.dataset.i);
+    d.r[i] = Math.max(0, Math.min(99, d.r[i] + (a === "inc" ? 1 : -1)));
+    saveDraft(); renderToday();
+  } else if (a === "done"){
+    const ex = EX.find(e => e.id === t.dataset.ex), c = roundChecks(ex);
+    for (let i = 0; i < c.length; i++) c[i] = t.checked;
+    ui.finishMsg = ""; saveDraft(); renderToday();
+  } else if (a === "rchk"){
+    const ex = EX.find(e => e.id === t.dataset.ex), c = roundChecks(ex), i = Number(t.dataset.i);
+    c[i] = !c[i];
+    ui.finishMsg = ""; saveDraft(); renderToday();
+  } else if (a === "bal"){
+    draft.bal = t.checked; saveDraft();
+  } else if (a === "rest"){
+    if (ui.rest){ clearInterval(ui.rest.t); ui.rest = null; t.textContent = restLabel(); }
+    else { ui.rest = {left:75, t:setInterval(tickRest, 1000)}; t.textContent = restLabel(); }
+  } else if (a === "finish"){
+    if (ui.rest){ clearInterval(ui.rest.t); ui.rest = null; }
+    finish();
+  } else if (a === "newsession"){
+    ui.summary = null; renderToday(); window.scrollTo({top:0});
+  } else if (a === "rm"){
+    ui.confirmRemove = true; renderHist();
+  } else if (a === "rmno"){
+    ui.confirmRemove = false; renderHist();
+  } else if (a === "rmyes"){
+    const s = state.sessions.pop();
+    if (s && Array.isArray(s.ups)) s.ups.forEach(id => { if (state.levels[id] > 1) state.levels[id]--; });
+    ui.confirmRemove = false; ui.summary = null;
+    persist(); renderAll();
+  } else if (a === "backup"){
+    backup();
+  } else if (a === "restoreno"){
+    ui.restorePending = null; ui.backupMsg = ""; renderHist();
+  } else if (a === "restoreyes"){
+    if (!ui.restorePending) return;
+    state = ui.restorePending; ui.restorePending = null;
+    draft = {hip:null, bal:false, reps:{}, rdone:{}}; saveDraft();
+    ui.summary = null; ui.confirmRemove = false;
+    persist();
+    ui.backupMsg = "Restored " + state.sessions.length + " sessions.";
+    renderAll();
+  } else if (a === "lvup" || a === "lvdown"){
+    const ex = EX.find(e => e.id === t.dataset.ex), cur = state.levels[ex.id];
+    const next = a === "lvup" ? cur + 1 : cur - 1;
+    if (next < 1 || next > 4 || (a === "lvup" && gateBlocks(ex, next))) return;
+    state.levels[ex.id] = next;
+    delete draft.reps[ex.id]; saveDraft();
+    persist(); renderAll();
+  }
+});
+
+renderAll();
+})();
+</script>
+</body>
+</html>
