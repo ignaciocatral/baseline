@@ -522,7 +522,7 @@ function finish(){
 
 /* ---------- Backup and restore ---------- */
 function backup(){
-  const name = "baseline-strength-backup-"+todayISO()+".json";
+  const name = "Baseline "+todayISO()+".json";   // short so the Files app shows the whole date
   const text = JSON.stringify({app:"baseline-strength", v:1, exported:new Date().toISOString(), state:clone(state)}, null, 1);
   const done = () => { state.lastBackup = {d:todayISO(), n:state.sessions.length}; persist(); ui.backupMsg = "Backup saved."; renderHist(); };
   const fail = (e) => { ui.backupMsg = (e && e.name === "AbortError") ? "Backup canceled." : "Couldn't save the backup. Try again."; renderHist(); };
