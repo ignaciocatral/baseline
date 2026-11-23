@@ -107,6 +107,9 @@ details.warm ul{margin:8px 0 0;padding-left:20px;color:var(--muted)}
 .btn.small{padding:6px 10px;font-size:13px;font-weight:600}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 #rest{font-variant-numeric:tabular-nums;min-width:110px}
+.bar.confirming{flex-wrap:wrap}
+.bar .ask{flex-basis:100%;font-weight:600}
+.bar .ask span{display:block;font-weight:400;font-size:13px;color:var(--muted)}
 
 .summary{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:12px 0}
 .summary h3{margin:0 0 6px;font-family:var(--font-display);font-size:24px;text-transform:uppercase}
@@ -245,7 +248,7 @@ function isDone(ex){ return roundChecks(ex).every(Boolean); }
 function doneCount(){ return EX.filter(isDone).length; }
 function anyRoundDone(){ return EX.some(e => roundChecks(e).some(Boolean)); }
 
-let ui = {tab:"today", summary:null, confirmRemove:false, rest:null, backupMsg:"", restorePending:null, finishMsg:""};
+let ui = {tab:"today", summary:null, confirmRemove:false, rest:null, backupMsg:"", restorePending:null, finishMsg:"", confirmFinish:false};
 
 /* ---------- Storage (db when available, device storage always) ---------- */
 let store = {ref:null};
@@ -388,7 +391,13 @@ function renderToday(){
 
   h += '<label class="check"><input type="checkbox" id="bal" data-act="bal" '+(draft.bal?'checked':'')+'><span><strong>Balance finisher</strong><br><span class="sub" style="margin:0">Stand on one foot, 30 seconds each side, near a counter. Once easy, close your eyes.</span></span></label>';
 
-  h += '<div class="bar"><button class="btn ghost" id="rest" data-act="rest">'+restLabel()+'</button><button class="btn primary" data-act="finish">Finish session ('+doneCount()+'/'+EX.length+' done)</button></div>';
+  if (ui.confirmFinish){
+    const left = EX.length - doneCount();
+    h += '<div class="bar confirming" role="group" aria-label="Confirm finish"><div class="ask">Finish and save this session?<span>'+(left ? left+' of '+EX.length+' exercises still have unchecked rounds. Those won\'t count.' : 'All '+EX.length+' exercises are checked off.')+'</span></div>';
+    h += '<button class="btn ghost" data-act="finishyes">Finish and save</button><button class="btn primary" data-act="finishno">Keep going</button></div>';
+  } else {
+    h += '<div class="bar"><button class="btn ghost" id="rest" data-act="rest">'+restLabel()+'</button><button class="btn primary" data-act="finish">Finish session ('+doneCount()+'/'+EX.length+' done)</button></div>';
+  }
   if (ui.finishMsg) h += '<p class="sub" style="margin-top:8px;color:var(--warn)">'+esc(ui.finishMsg)+'</p>';
   if (draft.hip === null) h += '<p class="sub" style="margin-top:8px">Tip: rate the hip before finishing so the session counts toward unlocking harder levels.</p>';
   v.innerHTML = h;
@@ -575,6 +584,7 @@ document.addEventListener("click", ev => {
     return;
   }
   const a = t.dataset.act;
+  if (ui.confirmFinish && a !== "finish" && a !== "finishyes" && a !== "finishno") ui.confirmFinish = false;
   if (a === "hip"){
     const val = Number(t.dataset.v);
     draft.hip = draft.hip === val ? null : val;
@@ -597,6 +607,13 @@ document.addEventListener("click", ev => {
     if (ui.rest){ clearInterval(ui.rest.t); ui.rest = null; t.textContent = restLabel(); }
     else { ui.rest = {left:75, t:setInterval(tickRest, 1000)}; t.textContent = restLabel(); }
   } else if (a === "finish"){
+    if (!anyRoundDone()){ ui.finishMsg = "Check off at least one round before finishing."; renderToday(); return; }
+    ui.finishMsg = ""; ui.confirmFinish = true; ui.confirmAt = Date.now(); renderToday();
+  } else if (a === "finishno"){
+    ui.confirmFinish = false; renderToday();
+  } else if (a === "finishyes"){
+    if (Date.now() - (ui.confirmAt || 0) < 600) return;   // ignore a double tap carried over from the first button
+    ui.confirmFinish = false;
     if (ui.rest){ clearInterval(ui.rest.t); ui.rest = null; }
     finish();
   } else if (a === "newsession"){
