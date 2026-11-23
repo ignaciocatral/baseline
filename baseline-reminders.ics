@@ -21,11 +21,11 @@ RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU
 END:STANDARD
 END:VTIMEZONE
 BEGIN:VEVENT
-UID:baseline-workout-20261102@ignaciocatral.github.io
-DTSTAMP:20261030T220000Z
-DTSTART;TZID=America/Chicago:20261102T163000
-DTEND;TZID=America/Chicago:20261102T171000
-RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR
+UID:baseline-workout-tuth-20261124@ignaciocatral.github.io
+DTSTAMP:20261123T193000Z
+DTSTART;TZID=America/Chicago:20261124T163000
+DTEND;TZID=America/Chicago:20261124T171000
+RRULE:FREQ=WEEKLY;BYDAY=TU,TH
 SUMMARY:Baseline workout
 DESCRIPTION:Start Functional Strength Training on your Watch\, then open Baseline. Rate your hip first.
 URL:https://ignaciocatral.github.io/baseline/
@@ -36,11 +36,11 @@ TRIGGER:PT0M
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:baseline-backup-20261113@ignaciocatral.github.io
-DTSTAMP:20261030T220000Z
-DTSTART;TZID=America/Chicago:20261113T171500
-DTEND;TZID=America/Chicago:20261113T172000
-RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=FR
+UID:baseline-backup-th-20261203@ignaciocatral.github.io
+DTSTAMP:20261123T193000Z
+DTSTART;TZID=America/Chicago:20261203T171500
+DTEND;TZID=America/Chicago:20261203T172000
+RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=TH
 SUMMARY:Back up Baseline log
 DESCRIPTION:Open Baseline\, go to History\, tap Save backup\, then Save to Files.
 URL:https://ignaciocatral.github.io/baseline/

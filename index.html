@@ -140,7 +140,7 @@ label.btn{display:inline-block;cursor:pointer}
 <body>
 <header class="court">
   <div class="wrap">
-    <div class="eyebrow">No-equipment strength, 3x a week</div>
+    <div class="eyebrow">No-equipment strength, Tuesday and Thursday</div>
     <h1>Baseline Strength</h1>
     <div class="meta">
       <span><b id="m-week">1</b>week</span>
@@ -205,7 +205,7 @@ const EX = [
   {n:"Lateral lunge", d:"Step wide to one side, sit back into that hip, push back to center.", u:"reps per side", lo:8, hi:12},
   {n:"Side-to-side hops", d:"Small, quick, quiet hops over an imaginary line. Stop if the hip or Achilles complains.", u:"seconds", lo:20, hi:40}]}
 ];
-const HIP_GATE_SESSIONS = 6;   // about two weeks at 3 sessions a week
+const HIP_GATE_SESSIONS = 6;   // about three weeks at 2 sessions a week
 const HIP_QUIET = 2;           // 0-10 rating at or below this counts as quiet
 const HIP_FLARE = 5;           // at or above this, gated exercises drop a level for the day
 const MAX_SESSIONS = 400;
@@ -326,7 +326,7 @@ function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt
 /* ---------- Render: header ---------- */
 function renderMeta(){
   document.getElementById("m-week").textContent = weekNum();
-  document.getElementById("m-thisweek").textContent = thisWeekCount() + "/3";
+  document.getElementById("m-thisweek").textContent = thisWeekCount() + "/2";
   document.getElementById("m-total").textContent = state.sessions.length;
 }
 
@@ -336,10 +336,10 @@ function renderToday(){
   if (ui.summary){ v.innerHTML = summaryHTML(ui.summary); return; }
   const n = roundsToday();
   let h = "";
-  const dow = new Date().getDay();   // 1 Mon, 3 Wed, 5 Fri
+  const dow = new Date().getDay();
   const loggedToday = state.sessions.some(s => s.d === todayISO());
-  if ([1,3,5].includes(dow) && !loggedToday){
-    h += '<div class="good"><strong>Workout day.</strong> '+(dow === 1 ? 'Tennis was last night, so rate your hip below before you start.' : 'Your session is on the schedule for today.')+'</div>';
+  if ([2,4].includes(dow) && !loggedToday){   // 2 Tue, 4 Thu
+    h += '<div class="good"><strong>Workout day.</strong> '+(dow === 2 ? 'First session since Sunday tennis, so rate your hip below before you start.' : 'Your session is on the schedule for today.')+'</div>';
   }
   const lastB = state.lastBackup ? parseISO(state.lastBackup.d) : null;
   if (state.sessions.length && (!lastB || (parseISO(todayISO()) - lastB) / 864e5 >= 14)){
@@ -467,7 +467,7 @@ function renderHist(){
 /* ---------- Render: plan ---------- */
 function renderPlan(){
   const v = document.getElementById("v-plan");
-  let h = '<div class="note"><strong>Phone reminders.</strong> Adds two repeating events to your iPhone Calendar: workouts Monday, Wednesday and Friday at 4:30 PM, and a backup reminder every other Friday. Change the times in Calendar afterward if you like.<div style="margin-top:10px"><a class="btn small primary" style="display:inline-block;text-decoration:none" href="baseline-reminders.ics">Add reminders to Calendar</a></div></div>';
+  let h = '<div class="note"><strong>Phone reminders.</strong> Adds two repeating events to your iPhone Calendar: workouts Tuesday and Thursday at 4:30 PM, and a backup reminder every other Thursday after your workout. If you added the earlier Monday, Wednesday and Friday reminders, delete that series in Calendar first. Change the times in Calendar afterward if you like.<div style="margin-top:10px"><a class="btn small primary" style="display:inline-block;text-decoration:none" href="baseline-reminders.ics">Add reminders to Calendar</a></div></div>';
   h += '<div class="note"><strong>How it ramps up.</strong> Each exercise has four levels. When you hit the top of the rep range in every round, that exercise moves up and you start again at the bottom of the range. Weeks 1 and 2 are two rounds, three after that. Mild effort soreness is fine. Sharp joint pain means drop a level.</div>';
   h += '<div class="note"><strong>Your hip rule.</strong> Outer-hip work is in every session. Split squats, lateral lunges and hops stay locked until '+HIP_GATE_SESSIONS+' sessions in a row are rated '+HIP_QUIET+' or lower. A rating of '+HIP_FLARE+' or more eases those exercises one level that day. See a doctor or physical therapist for pain at night or at rest, a limp, or soreness that keeps getting worse.</div>';
   EX.forEach(ex => {
